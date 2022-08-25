@@ -26,9 +26,10 @@ async function main (){
         
         let criteria = {};
 
-        if(req.query.title) {
-            criteria.title = {
-                '$regex': req.query.title
+        if(req.query.restaurant) {
+            criteria.restaurant = {
+                '$regex': req.query.restaurant,
+                '$options': 'i'
             }
         }
 
