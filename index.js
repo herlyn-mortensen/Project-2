@@ -22,13 +22,30 @@ async function main (){
         });
        })
 
+    app.get('/reviews', async function(req,res){
+        
+        let criteria = {};
+
+        if(req.query.title) {
+            criteria.title = {
+                '$regex': req.query.title
+            }
+        }
+
+        console.log("criteria=", criteria);
+
+        const reviews = await db.collection('reviews').find({criteria}).toArray();
+        res.json(reviews);
+    })
+
+
     app.post('/reviews', async function(req,res){
         await db.collection('reviews').insertOne({
-            "restaurant": "Les Amis",
-            "title": "Legendary Les Amis",
-            "cuisine": "French",
-            "review": "Been here many times and each time excellent and 3 michelin star worthy Each dish was exquisite and tasty. As expected, they go all out with the bread selection, amuse bouche, petit fours etc Service is down to earth and equally good.",
-            "ratings": 5,
+            "restaurant": req.body.restaurant,
+            "title": req.body.title,
+            "cuisine": req.body.cuisine,
+            "review": req.body.review,
+            "ratings": req.body.ratings
             
         })
         res.json({
