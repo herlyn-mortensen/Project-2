@@ -2,6 +2,7 @@ const express = require ('express')
 const cors = require ('cors');
 
 const mongoUtil = require('./MongoUtil');
+const { ObjectID } = require('bson');
 
 const app = express();
 
@@ -33,6 +34,12 @@ async function main (){
             }
         }
 
+        if (req.query.min_ratings) {
+            criteria.ratings = {
+                '$gte': parseInt(req.query.min_ratings)
+            }
+        }
+
         console.log("criteria=", criteria);
 
         const reviews = await db.collection('reviews').find(criteria).toArray();
@@ -41,7 +48,6 @@ async function main (){
 
     
     })
-
 
 
 
@@ -57,8 +63,36 @@ async function main (){
         res.json({
             'message':'ok'
         })
-       })
-}
+    })
+    
+    app.put('/reviews/:reviewId', async function(req,res){
+
+        const review = await db.collection('reviews').findOne({
+            '_id': ObjectID(req.params.reviewId)
+        })
+
+        await db.collection('reviews').updateOne({
+            '_id': ObjectID(req.params.reviewId)
+            },{
+                
+                "$set":{
+                    'restaurant': req.body.restaurant ? req.body.restaurant : review.restaurant,
+                    'title': req.body.title ? req.body.title : review.title,
+                    'cuisine': req.body.cuisine ? req.body.cuisine : review.cuisine,
+                    'review': req.body.review ? req.body.review : review.review,
+                    'ratings': req.body.ratings ? req.body.ratings : review.ratings,
+                }
+
+
+        })
+
+        console.log(req.params.reviewId);
+        res.json({
+            'message':'put received'
+        })
+    })
+
+ }
 main();
 
 app.listen(3000, function(){
