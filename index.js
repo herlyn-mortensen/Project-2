@@ -35,9 +35,14 @@ async function main (){
 
         console.log("criteria=", criteria);
 
-        const reviews = await db.collection('reviews').find({criteria}).toArray();
-        res.json(reviews);
+        const reviews = await db.collection('reviews').find(criteria).toArray();
+        console.log(reviews)
+        res.send(reviews);
+
+    
     })
+
+
 
 
     app.post('/reviews', async function(req,res){

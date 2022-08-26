@@ -6,7 +6,6 @@ async function connect(mongoUri, databaseName) {
     })
 
     const db = client.db(databaseName);
-    //const db = client.db('sample_airbnb');
     return db;
 }
 
