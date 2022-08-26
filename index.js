@@ -40,10 +40,8 @@ async function main (){
             }
         }
 
-        console.log("criteria=", criteria);
 
         const reviews = await db.collection('reviews').find(criteria).toArray();
-        console.log(reviews)
         res.send(reviews);
 
     
@@ -52,7 +50,7 @@ async function main (){
 
 
     app.post('/reviews', async function(req,res){
-        await db.collection('reviews').insertOne({
+        const results = await db.collection('reviews').insertOne({
             "restaurant": req.body.restaurant,
             "title": req.body.title,
             "cuisine": req.body.cuisine,
@@ -61,7 +59,8 @@ async function main (){
             
         })
         res.json({
-            'message':'ok'
+            'message':'New review created successfully',
+            'results': results
         })
     })
     
@@ -71,7 +70,7 @@ async function main (){
             '_id': ObjectID(req.params.reviewId)
         })
 
-        await db.collection('reviews').updateOne({
+        const results = await db.collection('reviews').updateOne({
             '_id': ObjectID(req.params.reviewId)
             },{
                 
@@ -82,13 +81,21 @@ async function main (){
                     'review': req.body.review ? req.body.review : review.review,
                     'ratings': req.body.ratings ? req.body.ratings : review.ratings,
                 }
-
-
         })
 
-        console.log(req.params.reviewId);
+        
         res.json({
-            'message':'put received'
+            'message':'Review updated',
+            'results': results
+        })
+    })
+
+    app.delete('/reviews/:reviewId', async function (req, res) {
+        await db.collection('reviews').deleteOne({
+            '_id': ObjectID(req.params.reviewId)
+        })
+        res.json({
+            'message': "Review deleted successfully"
         })
     })
 
