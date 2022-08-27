@@ -1,5 +1,8 @@
 const express = require ('express')
 const cors = require ('cors');
+require('dotenv').config();
+
+console.log(process.env);
 
 const mongoUtil = require('./MongoUtil');
 const { ObjectID } = require('bson');
@@ -10,8 +13,8 @@ const app = express();
 app.use(express.json())
 app.use(cors());
 
-const MONGO_URI = "mongodb+srv://herlynmortensen:EBYB8LMXG4z3Kd3E@demo.m51ld.mongodb.net/?retryWrites=true&w=majority";
-const DB_NAME = "restaurant_reviews";
+const MONGO_URI = process.env.MONGO_URI;
+const DB_NAME = process.env.DB_NAME;
 
 async function main (){
     const db = await mongoUtil.connect(MONGO_URI, DB_NAME);
