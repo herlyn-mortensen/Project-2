@@ -102,7 +102,27 @@ async function main (){
         })
     })
 
+    app.post('/reviews/:reviewId/comments', async function(req,res){
+        await db.collection('reviews').updateOne({
+            _id: ObjectID(req.params.reviewId)
+        },{
+            '$push':{
+                'comments':{
+                    _id: ObjectID(),
+                    'content': req.body.content,
+                    'nickname': req.body.nickname
+                }
+            }
+        })
+
+        res.json({
+            'message': 'Comment has been added successfully',
+            'results': results
+        })
+    })
+
  }
+ 
 main();
 
 app.listen(3000, function(){
