@@ -1,7 +1,7 @@
 const express = require ('express')
 const cors = require ('cors');
 require('dotenv').config();
-const jsonwebtoken = require('jsonwebtoken');
+const jwt = require('jsonwebtoken');
 
 console.log(process.env);
 
@@ -16,6 +16,44 @@ app.use(cors());
 
 const MONGO_URI = process.env.MONGO_URI;
 const DB_NAME = process.env.DB_NAME;
+const TOKEN_SECRET = process.env.TOKEN_SECRET;
+
+function generateAccessToken(id, email) {
+    return jwt.sign({
+        'id':id,
+        'email': email
+     }, TOKEN_SECRET, {
+        'expiresIn': '3hr'
+    })
+}
+
+function checkIfAuthenticatedJWT(req, res, next){
+    if (req.headers.authorization) {
+        const headers = req.headers.authorization;
+        const token = headers.split(" ")[1];
+
+        jwt.verify(token, TOKEN_SECRET, function (err, tokenData) {
+            if (err) {
+                res.status(403);
+                res.json({
+                    'error': "Your access token is invalid"
+                })
+                return;
+            }
+            req.user = tokenData;
+
+            next();
+
+        })
+
+    } else {
+        res.status(403);
+        res.json({
+            'error': "You must provide an access token to access this route"
+        })
+    }
+
+}
 
 async function main (){
     const db = await mongoUtil.connect(MONGO_URI, DB_NAME);
@@ -94,7 +132,6 @@ async function main (){
         const results = await db.collection('reviews').updateOne({
             '_id': ObjectID(req.params.reviewId)
             },{
-                
                 "$set":{
                     'restaurant': req.body.restaurant ? req.body.restaurant : review.restaurant,
                     'title': req.body.title ? req.body.title : review.title,
@@ -188,9 +225,40 @@ async function main (){
         })
     })
 
- }
- 
+    app.post('/login', async function(req,res){
+        const user = await db.collection('users').findOne({
+            'email': req.body.email,
+            'password': req.body.password
+        });
+        
+        if (user) {
+            let token = generateAccessToken(user._id, user.email);
+            res.json({
+                'accessToken': token
+            })
+        } else {
+            res.status(401);
+            res.json({
+                'message': 'Invalid email or password'
+            })
+        }
+    })
+
+    app.get('/user/:userId', [checkIfAuthenticatedJWT], async function (req, res) {
+
+        res.json({
+            'email': req.user.email,
+            'id': req.user.id,
+            'message': 'You are viewing your profile'
+        })
+
+
+
+    })
+}
+
 main();
+
 
 app.listen(3000, function(){
     console.log("server has started")
