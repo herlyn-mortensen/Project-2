@@ -1,6 +1,7 @@
 const express = require ('express')
 const cors = require ('cors');
 require('dotenv').config();
+const jsonwebtoken = require('jsonwebtoken');
 
 console.log(process.env);
 
@@ -27,7 +28,9 @@ async function main (){
        })
 
     app.get('/reviews', async function(req,res){
-        
+       
+        try {
+
         let criteria = {};
 
         if(req.query.restaurant) {
@@ -44,10 +47,25 @@ async function main (){
         }
 
 
-        const reviews = await db.collection('reviews').find(criteria).toArray();
-        res.send(reviews);
+        const reviews = await db.collection('reviews').find(criteria, {
+            'projection': {
+                '_id': 1,
+                'restaurant': 1,
+                'title': 1,
+                'cuisine': 1,
+                'review': 1,
+                'ratings': 1
+            }
+        }).toArray();
+        res.json(reviews);
+    } catch (e) {
+        console.log(e);
+        res.status(500);
+        res.json({
+            'error': "Internal server error"
+        })
+    }
 
-    
     })
 
 
@@ -103,12 +121,12 @@ async function main (){
     })
 
     app.post('/reviews/:reviewId/comments', async function(req,res){
-        await db.collection('reviews').updateOne({
+        const results = await db.collection('reviews').updateOne({
             _id: ObjectID(req.params.reviewId)
         },{
             '$push':{
                 'comments':{
-                    _id: ObjectID(),
+                    '_id': ObjectID(),
                     'content': req.body.content,
                     'nickname': req.body.nickname
                 }
@@ -117,6 +135,55 @@ async function main (){
 
         res.json({
             'message': 'Comment has been added successfully',
+            'results': results
+        })
+    })
+
+    app.get('/reviews/:reviewId', async function(req,res){
+        const review = await db.collection('reviews').findOne({
+            _id:ObjectID(req.params.reviewId)
+        });
+        res.json(review);
+    })
+
+    app.put('/comments/:commentId/update', async function(req,res){
+        const results = await db.collection('reviews').updateOne({
+            'comments._id':ObjectID(req.params.commentId)
+        },{
+            '$set': {
+                'comments.$.content': req.body.content,
+                'comments.$.nickname': req.body.nickname
+            }
+        })
+        res.json({
+            'message': 'Comment updated',
+            'results': results
+        })
+    })
+    app.delete('/comments/:commentId', async function(req,res){
+        const results = await db.collection('reviews').updateOne({
+            'comments._id': ObjectID(req.params.commentId)
+        }, {
+            '$pull': {
+                'comments': {
+                    '_id': ObjectID(req.params.commentId)
+                }
+            }
+        })
+        res.json({
+            'message': 'Comment deleted',
+            'result': results
+        })
+    })
+
+    app.post('/users', async function (req, res) {
+        const results = await db.collection('users').insertOne({
+            "email": req.body.email,
+            "password": req.body.password
+        });
+
+        res.json({
+            'message': 'User has been created',
             'results': results
         })
     })
