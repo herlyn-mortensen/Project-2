@@ -2,8 +2,6 @@ const express = require ('express')
 const cors = require ('cors');
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
-const hbs = require('hbs');
-const wax = require('wax-on');
 
 console.log(process.env);
 
@@ -15,20 +13,6 @@ const app = express();
 
 app.use(express.json())
 app.use(cors());
-app.set('view engine', 'hbs');
-
-app.use(express.urlencoded({
-    'extended': false
-}))
-
- wax.on(hbs.handlebars);
- wax.setLayoutPath('./views/layouts')
-
-app.use(express.urlencoded({extended:false}));
-
- hbs.handlebars.registerHelper('ifEquals', function(arg1, arg2, options) {
-    return (arg1 == arg2) ? options.fn(this) : options.inverse(this);
-});
 
 
 
